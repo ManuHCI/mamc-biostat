@@ -4,7 +4,7 @@
 #  Developed by the faculty of Maulana Azad Medical College & Lok Nayak Hospital, New Delhi
 #  Licence: GNU GPL-3.0   |   Engine: R
 # =====================================================================
-APP_VERSION <- "1.1.2"
+APP_VERSION <- "1.1.3"
 suppressPackageStartupMessages({ library(shiny); library(readxl); library(DT); library(ggplot2) })
 options(shiny.maxRequestSize = 100 * 1024^2, warn = 1)
 
@@ -166,7 +166,7 @@ ui <- tagList(
         div(class = "contrib-box",
           div(class = "lbl2", "Contributed by"),
           div(class = "names",
-            div(tags$b("Dr. Aashima Dabas"), "Professor, Department of Pharmacology"),
+            div(tags$b("Dr. Aashima Dabas"), "Professor, Department of Paediatrics"),
             div(tags$b("Dr. Manu Kumar Shetty"), "Professor, Department of Pharmacology")),
           div(class = "mic-line", "Medical Innovation Centre, Maulana Azad Medical College, New Delhi"))))
   )
