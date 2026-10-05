@@ -78,9 +78,17 @@ open_window <- function(url) {
   b <- find_app_browser()
   prof <- file.path(tools::R_user_dir("MAMCBioStat", "cache"), "window")
   dir.create(prof, recursive = TRUE, showWarnings = FALSE)
+  # if no window has connected after 20 seconds, open the normal web browser instead
+  later::later(function() if (!identical(Sys.getenv("MAMC_CONNECTED"), "1")) utils::browseURL(url), 20)
   if (!is.na(b)) {
-    ok <- tryCatch({ system2(b, c(paste0("--app=", url), paste0("--user-data-dir=", shQuote(prof)), "--window-size=1400,900", "--no-first-run"), wait = FALSE); TRUE },
-                   error = function(e) FALSE)
+    args <- c(paste0("--app=", url), paste0("--user-data-dir=", shQuote(prof)), "--window-size=1400,900", "--no-first-run")
+    ok <- tryCatch({
+      if (.Platform$OS.type == "windows") {
+        # 'start' gives the window its own normal (visible) state even when MAMC BioStat runs hidden
+        system2("cmd", c("/c", "start", '""', shQuote(b), args), wait = FALSE, invisible = TRUE)
+      } else system2(b, args, wait = FALSE)
+      TRUE
+    }, error = function(e) FALSE)
     if (ok) return(invisible())
   }
   utils::browseURL(url)
