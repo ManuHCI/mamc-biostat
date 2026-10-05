@@ -20,6 +20,7 @@ APP_VERSION = re.search(r'APP_VERSION <- "([^"]+)"', (ROOT / "app" / "app.R").re
 APP_PACKAGES = ["shiny", "readxl", "writexl", "DT", "ggplot2", "bslib", "jsonlite", "survival"]
 ARCH = "arm64" if platform.machine() == "arm64" else "x86_64"
 RFW = "/Library/Frameworks/R.framework/Resources"
+MAC_R_VERSION = "4.5.3"
 
 
 def log(m):
@@ -83,7 +84,9 @@ def make_icns(dest):
 
 
 def main():
-    pkg_url, r_version = (os.environ.get("R_PKG_URL"), os.environ.get("R_VERSION")) if os.environ.get("R_PKG_URL") else latest_r_pkg()
+    # R 4.5.x is the newest series built for macOS 11 (Big Sur) and later, so it runs on the most student Macs
+    r_version = os.environ.get("R_VERSION", MAC_R_VERSION)
+    pkg_url = f"{CRAN}/bin/macosx/big-sur-{ARCH}/base/R-{r_version}-{ARCH}.pkg"
     r_minor = ".".join(r_version.split(".")[:2])
     log(f"MAMC BioStat {APP_VERSION} for macOS {ARCH}, R {r_version}")
     work = ROOT / "build" / f"mac-{ARCH}"
