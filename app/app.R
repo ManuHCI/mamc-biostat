@@ -4,7 +4,7 @@
 #  Developed by the faculty of Maulana Azad Medical College & Lok Nayak Hospital, New Delhi
 #  Licence: GNU GPL-3.0   |   Engine: R
 # =====================================================================
-APP_VERSION <- "1.1.1"
+APP_VERSION <- "1.1.2"
 suppressPackageStartupMessages({ library(shiny); library(readxl); library(DT); library(ggplot2) })
 options(shiny.maxRequestSize = 100 * 1024^2, warn = 1)
 
@@ -177,6 +177,7 @@ DESKTOP <- new.env(); DESKTOP$n <- 0
 server <- function(input, output, session) {
   # Desktop mode: quit R automatically a few seconds after the last window is closed
   DESKTOP$n <- DESKTOP$n + 1
+  Sys.setenv(MAMC_CONNECTED = "1")
   session$onSessionEnded(function() {
     DESKTOP$n <- DESKTOP$n - 1
     if (identical(Sys.getenv("MAMC_DESKTOP"), "1"))
