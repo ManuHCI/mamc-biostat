@@ -1,0 +1,149 @@
+# Builds the stand-alone installers of MAMC BioStat and tests each one:
+#   Windows 10/11 (.exe + portable .zip)   Windows 7/8.1 (.exe + portable .zip)
+#   macOS Apple Silicon (.dmg)              macOS Intel (.dmg)
+# Run it from the "Actions" tab (Run workflow), or push a tag like v1.1.0 to publish a Release.
+name: Build installers
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+
+jobs:
+  stats-check:
+    name: Statistics self-test (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack source (if uploaded as a zip)
+        shell: bash
+        run: if [ -f mamc-biostat-src.zip ]; then unzip -oq mamc-biostat-src.zip; fi
+      - uses: r-lib/actions/setup-r@v2
+        with: { use-public-rspm: true }
+      - run: Rscript -e "install.packages(c('shiny','readxl','writexl','DT','ggplot2','bslib','jsonlite'))"
+      - name: Run all 40 statistical tests on demo data
+        working-directory: app
+        run: Rscript ../tools/run_all_tests.R
+      - name: Render all chart types
+        working-directory: app
+        run: Rscript ../tools/test_charts.R
+
+  windows:
+    name: Windows ${{ matrix.profile }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [modern, win7]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack source (if uploaded as a zip)
+        shell: pwsh
+        run: if (Test-Path mamc-biostat-src.zip) { Expand-Archive -Force mamc-biostat-src.zip . }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Install NSIS
+        run: choco install nsis -y --no-progress
+      - name: Build installer
+        run: python build_tools/build_windows.py --profile ${{ matrix.profile }}
+      - name: Test - install silently
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem dist\MAMC_BioStat_Setup_*.exe | Select-Object -First 1
+          Start-Process -Wait -FilePath $exe.FullName -ArgumentList "/S", "/D=C:\mamc_test"
+          if (-not (Test-Path "C:\mamc_test\R\bin\x64\Rscript.exe")) { throw "installer did not install R" }
+          if (-not (Test-Path "C:\mamc_test\MAMC BioStat.vbs")) { throw "launcher missing" }
+      - name: Test - all statistical tests with the bundled R
+        shell: pwsh
+        working-directory: app
+        run: C:\mamc_test\R\bin\x64\Rscript.exe ..\tools\run_all_tests.R
+      - name: Test - app starts and serves the home page (offline packages only)
+        shell: pwsh
+        run: |
+          $env:MAMC_NO_BROWSER = "1"; $env:MAMC_PORT = "8799"; $env:MAMC_DESKTOP = "0"
+          $p = Start-Process -PassThru -FilePath "C:\mamc_test\R\bin\x64\Rscript.exe" -ArgumentList "C:\mamc_test\launcher.R" -RedirectStandardError err.txt -RedirectStandardOutput out.txt
+          $ok = $false
+          for ($i = 0; $i -lt 60; $i++) { Start-Sleep 2; try { $r = Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8799; if ($r.Content -match "MAMC") { $ok = $true; break } } catch {} }
+          Get-Content err.txt
+          Stop-Process -Id $p.Id -Force
+          if (-not $ok) { throw "app did not start" }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MAMC_BioStat_Windows_${{ matrix.profile }}
+          path: |
+            dist/*.exe
+            dist/*.zip
+
+  mac:
+    name: macOS ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: AppleSilicon, runner: macos-14 }
+          - { arch: Intel, runner: macos-15-intel }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack source (if uploaded as a zip)
+        shell: bash
+        run: if [ -f mamc-biostat-src.zip ]; then unzip -oq mamc-biostat-src.zip; fi
+      - name: Build .dmg
+        run: python3 build_tools/build_mac.py
+      - name: Test - app starts from the built bundle
+        run: |
+          RES="build/mac-$(uname -m)/dmg/MAMC BioStat.app/Contents/Resources"
+          export MAMC_NO_BROWSER=1 MAMC_PORT=8799 MAMC_DESKTOP=0
+          /Library/Frameworks/R.framework/Resources/bin/Rscript "$RES/launcher.R" > out.txt 2>&1 &
+          for i in $(seq 1 60); do sleep 2; if curl -s http://127.0.0.1:8799 | grep -q MAMC; then echo STARTED; break; fi; done
+          cat out.txt; curl -s http://127.0.0.1:8799 | grep -q MAMC
+      - name: Test - all statistical tests
+        working-directory: app
+        run: |
+          LIB="$(cd "../build/mac-$(uname -m)/dmg/MAMC BioStat.app/Contents/Resources/library" && pwd)"
+          R_LIBS="$LIB" /Library/Frameworks/R.framework/Resources/bin/Rscript ../tools/run_all_tests.R
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MAMC_BioStat_macOS_${{ matrix.arch }}
+          path: dist/*.dmg
+
+  publish-source:
+    name: Publish source files in the repository
+    needs: [stats-check]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack uploaded zip and commit the files (workflow files excluded)
+        run: |
+          if [ -f mamc-biostat-src.zip ]; then
+            unzip -oq mamc-biostat-src.zip -x '.github/*'
+            git rm -q --cached mamc-biostat-src.zip; rm -f mamc-biostat-src.zip
+            git config user.name "github-actions"; git config user.email "actions@github.com"
+            git add -A; git commit -qm "Unpack source files" && git push || true
+          fi
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [stats-check, windows, mac]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: out, merge-multiple: true }
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: out/*
+          body: |
+            ## MAMC BioStat - free, open-source biostatistics software
+            Maulana Azad Medical College & Lok Nayak Hospital, New Delhi
+
+            **Which file do I download?**
+            | Computer | File |
+            |---|---|
+            | Windows 10 / 11 | `MAMC_BioStat_Setup_..._Windows10-11.exe` |
+            | Windows 7 / 8.1 | `MAMC_BioStat_Setup_..._Windows7-8.exe` |
+            | Mac with Apple chip (M1-M4) | `..._macOS-AppleSilicon.dmg` |
+            | Older Intel Mac | `..._macOS-Intel.dmg` |
+            | No admin rights / USB stick | the `..._portable.zip` for your Windows version |
+
+            Everything needed (including R) is inside - no internet required after download.
