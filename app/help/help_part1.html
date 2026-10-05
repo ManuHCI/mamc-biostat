@@ -1,0 +1,126 @@
+<!-- TEST:basics -->
+<h3>Statistics basics &ndash; read this first</h3>
+<h4>1. Types of variables</h4>
+<table class="helptab"><tr><th>Type</th><th>Meaning</th><th>Examples</th><th>Summarise with</th></tr>
+<tr><td>Continuous (numeric)</td><td>Measured on a scale</td><td>SBP, Hb, age, HbA1c</td><td>Mean &plusmn; SD (normal) or median (IQR) (skewed)</td></tr>
+<tr><td>Ordinal</td><td>Ordered categories / scores</td><td>Pain score 0-10, NYHA class, grade I-IV</td><td>Median (IQR), frequencies</td></tr>
+<tr><td>Nominal (categorical)</td><td>Categories without order</td><td>Sex, blood group, drug group</td><td>Number (%)</td></tr>
+<tr><td>Binary</td><td>Two categories</td><td>Died / survived, yes / no</td><td>Number (%)</td></tr>
+<tr><td>Time-to-event</td><td>Time until an event, with censoring</td><td>Survival time, time to relapse</td><td>Kaplan-Meier, median survival</td></tr></table>
+<h4>2. Hypothesis testing</h4>
+<ul><li><b>Null hypothesis (H<sub>0</sub>)</b>: no difference / no association. <b>Alternative (H<sub>1</sub>)</b>: there is a difference.</li>
+<li><b>p-value</b>: probability of getting a result at least as extreme as observed <i>if H<sub>0</sub> were true</i>. It is <u>not</u> the probability that H<sub>0</sub> is true.</li>
+<li><b>&alpha; (significance level)</b>: usually 0.05. If p &lt; &alpha;, reject H<sub>0</sub>.</li>
+<li><b>Type I error (&alpha;)</b>: false positive &ndash; concluding a difference exists when it does not. <b>Type II error (&beta;)</b>: false negative. <b>Power = 1 &minus; &beta;</b> (usually 80%).</li>
+<li><b>95% Confidence interval</b>: range of plausible values for the true population value. If a CI for a difference excludes 0 (or for a ratio excludes 1), the result is significant at 5%.</li>
+<li><b>Statistical vs clinical significance</b>: with large samples, tiny useless differences become significant. Always report the <b>effect size and its CI</b>, not just p.</li></ul>
+<h4>3. Parametric vs non-parametric</h4>
+<p>Parametric tests (t-test, ANOVA, Pearson) assume approximately normal data and compare <b>means</b>. Non-parametric tests (Mann-Whitney, Kruskal-Wallis, Spearman) use <b>ranks</b>, make fewer assumptions and compare distributions / medians. Use non-parametric tests for skewed data with small samples, ordinal scores, or outliers.</p>
+<h4>4. Quick test chooser</h4>
+<table class="helptab"><tr><th>Aim</th><th>Normal data</th><th>Skewed / ordinal</th><th>Categorical outcome</th></tr>
+<tr><td>1 group vs known value</td><td>One-sample t</td><td>Wilcoxon signed-rank (one sample)</td><td>Binomial / chi-square GOF</td></tr>
+<tr><td>2 independent groups</td><td>Independent t (Welch)</td><td>Mann-Whitney U</td><td>Chi-square / Fisher</td></tr>
+<tr><td>2 paired measurements</td><td>Paired t</td><td>Wilcoxon signed-rank</td><td>McNemar</td></tr>
+<tr><td>3+ independent groups</td><td>One-way ANOVA</td><td>Kruskal-Wallis</td><td>Chi-square (R&times;C)</td></tr>
+<tr><td>3+ repeated measurements</td><td>Repeated-measures ANOVA</td><td>Friedman</td><td>Cochran's Q</td></tr>
+<tr><td>Association of 2 numeric variables</td><td>Pearson r</td><td>Spearman &rho;</td><td>&ndash;</td></tr>
+<tr><td>Predict outcome from several variables</td><td>Linear regression</td><td>&ndash;</td><td>Logistic regression</td></tr>
+<tr><td>Time to event</td><td colspan="3">Kaplan-Meier + log-rank; Cox regression</td></tr></table>
+<p>Use the <b>Choose Test</b> tab &ndash; it asks these questions for you.</p>
+<h4>5. Multiple comparisons</h4>
+<p>Each test at &alpha; = 0.05 has a 5% false-positive risk. Doing 20 tests gives a ~64% chance of at least one false positive (\(1-0.95^{20}\)). Post-hoc tests (Tukey, Bonferroni, Holm, Dunn) control this.</p>
+
+<!-- TEST:desc -->
+<h3>Descriptive statistics</h3>
+<p class="lead"><b>Purpose:</b> summarise a numeric variable &ndash; its centre (mean, median) and spread (SD, IQR). Every thesis "Table 1" is built from these.</p>
+<h4>Formulae</h4>
+\[\bar x = \frac{\sum x_i}{n}\qquad SD = \sqrt{\frac{\sum (x_i-\bar x)^2}{n-1}}\qquad SE = \frac{SD}{\sqrt n}\qquad 95\%\,CI = \bar x \pm t_{0.975,n-1}\,SE\]
+<h4>Background &ndash; why n&minus;1?</h4>
+<p>The sample mean is calculated from the same data, so deviations from it are slightly smaller than deviations from the true population mean. Dividing by n&minus;1 (Bessel's correction, "degrees of freedom") makes the sample variance an unbiased estimate of the population variance.</p>
+<h4>SD vs SE</h4><p><b>SD</b> describes variability between <i>individuals</i>. <b>SE</b> describes the precision of the <i>mean</i> &ndash; it shrinks as n grows. Report mean &plusmn; SD for describing patients; use SE/CI for inference.</p>
+<h4>Mean or median?</h4><p>Normal (symmetric) data &rarr; mean &plusmn; SD. Skewed data (e.g. CRP, hospital stay, income), outliers or ordinal scores &rarr; median (IQR). Skewness beyond &plusmn;1 or a significant Shapiro-Wilk test suggests skew. A useful clue: if SD &gt; mean/2 for a variable that cannot be negative, it is probably skewed.</p>
+
+<!-- TEST:freq -->
+<h3>Frequency table and proportions</h3>
+<p class="lead"><b>Purpose:</b> count how many subjects fall into each category (e.g. sex, blood group) and give percentages with 95% CI.</p>
+<h4>Formula</h4>\[p = \frac{x}{n}\qquad \text{Wald 95\% CI: } p \pm 1.96\sqrt{\frac{p(1-p)}{n}}\]
+<p>MAMC BioStat reports the <b>exact Clopper-Pearson</b> interval (based on the binomial distribution), which is accurate even for small n or proportions near 0 or 1, where the Wald interval fails.</p>
+<h4>Tips</h4><ul><li>Report as n (%), e.g. "Males 64 (53.3%)".</li><li>State the denominator if there are missing values ("valid %").</li></ul>
+
+<!-- TEST:normality -->
+<h3>Normality testing (Shapiro-Wilk, Q-Q plot)</h3>
+<p class="lead"><b>Purpose:</b> decide whether parametric tests (t-test, ANOVA, Pearson) are appropriate.</p>
+<h4>Hypotheses</h4><p>H<sub>0</sub>: data come from a normal distribution. p &lt; 0.05 &rarr; evidence of non-normality.</p>
+<h4>Formula</h4>\[W = \frac{\left(\sum_{i=1}^n a_i x_{(i)}\right)^2}{\sum_{i=1}^n (x_i-\bar x)^2}\]
+<p>x<sub>(i)</sub> are the ordered values; a<sub>i</sub> are weights derived from the expected values of normal order statistics. W is essentially the squared correlation between the data and the values expected under normality; W = 1 means a perfect fit.</p>
+<h4>Background / caveats</h4><ul><li>Shapiro-Wilk is the most powerful common normality test for n &lt; 2000.</li><li>Small samples: low power &ndash; a non-significant result does not prove normality.</li><li>Large samples: trivial departures become significant. Thanks to the <b>Central Limit Theorem</b>, means of samples with n &ge; 30 per group are approximately normal anyway &ndash; look at the Q-Q plot and skewness.</li>
+<li>For t-tests check normality <b>within each group</b>; for paired t-test check the <b>differences</b>; for regression check the <b>residuals</b>.</li></ul>
+
+<!-- TEST:t_one -->
+<h3>One-sample t-test</h3>
+<p class="lead"><b>Purpose:</b> compare the mean of one sample with a known / reference value. <i>Example:</i> Is the mean Hb of MAMC hostel students different from 13 g/dL?</p>
+<h4>Hypotheses</h4><p>H<sub>0</sub>: &mu; = &mu;<sub>0</sub>; H<sub>1</sub>: &mu; &ne; &mu;<sub>0</sub>.</p>
+<h4>Assumptions</h4><ul><li>Numeric data, independent observations.</li><li>Approximately normal (or n &ge; 30).</li></ul>
+<h4>Formula</h4>\[t = \frac{\bar x - \mu_0}{s/\sqrt n},\qquad df = n-1\]
+<h4>Steps</h4><ol><li>Compute the sample mean and SD.</li><li>Compute SE = s/&radic;n.</li><li>Compute t = (difference)/SE.</li><li>Compare with the t distribution with n&minus;1 df to get p.</li></ol>
+<h4>Background</h4><p>W.S. Gosset ("Student", 1908, Guinness brewery) showed that when the SD is estimated from a small sample, the ratio follows a <i>t</i> distribution, which has heavier tails than the normal distribution. As n increases, t approaches the normal (z) distribution.</p>
+<h4>If assumptions fail</h4><p>Use the Wilcoxon signed-rank test (one-sample).</p>
+
+<!-- TEST:t_ind -->
+<h3>Independent-samples (unpaired) t-test</h3>
+<p class="lead"><b>Purpose:</b> compare means of a numeric outcome between <b>two independent groups</b>. <i>Example:</i> Mean SBP after 12 weeks in Drug A vs Drug B.</p>
+<h4>Hypotheses</h4><p>H<sub>0</sub>: &mu;<sub>1</sub> = &mu;<sub>2</sub>; H<sub>1</sub>: &mu;<sub>1</sub> &ne; &mu;<sub>2</sub>.</p>
+<h4>Assumptions</h4><ul><li>Independent observations; each subject in only one group.</li><li>Outcome approximately normal in each group (or n &ge; 30 per group).</li><li>Equal variances (Student) &ndash; checked by <b>Levene's test</b>. If violated, use <b>Welch's t-test</b>.</li></ul>
+<h4>Formulae</h4>
+\[s_p = \sqrt{\frac{(n_1-1)s_1^2+(n_2-1)s_2^2}{n_1+n_2-2}},\qquad t = \frac{\bar x_1 - \bar x_2}{s_p\sqrt{\frac1{n_1}+\frac1{n_2}}},\qquad df = n_1+n_2-2\]
+Welch: \[t = \frac{\bar x_1-\bar x_2}{\sqrt{\frac{s_1^2}{n_1}+\frac{s_2^2}{n_2}}},\qquad df = \frac{\left(\frac{s_1^2}{n_1}+\frac{s_2^2}{n_2}\right)^2}{\frac{(s_1^2/n_1)^2}{n_1-1}+\frac{(s_2^2/n_2)^2}{n_2-1}}\]
+Effect size: \[d = \frac{\bar x_1-\bar x_2}{s_p}\quad(0.2\text{ small},\;0.5\text{ medium},\;0.8\text{ large})\]
+<h4>Background</h4><p>The t statistic is a "signal-to-noise" ratio: the difference between means (signal) divided by its standard error (noise). Many statisticians now recommend Welch's test by default because it performs well whether or not variances are equal. Levene's test (Brown-Forsythe version, using deviations from the median) is used here as it is robust to non-normality.</p>
+<h4>If assumptions fail</h4><p>Skewed data with small samples &rarr; Mann-Whitney U test. 3+ groups &rarr; ANOVA.</p>
+
+<!-- TEST:t_paired -->
+<h3>Paired t-test</h3>
+<p class="lead"><b>Purpose:</b> compare two measurements on the <b>same subjects</b> (before/after treatment, left vs right eye) or matched pairs.</p>
+<h4>Hypotheses</h4><p>H<sub>0</sub>: mean difference &mu;<sub>d</sub> = 0.</p>
+<h4>Assumptions</h4><ul><li>Pairs are independent of each other.</li><li>The <b>differences</b> are approximately normal.</li></ul>
+<h4>Formula</h4>\[d_i = x_{2i}-x_{1i},\qquad t = \frac{\bar d}{s_d/\sqrt n},\qquad df = n-1\]
+<h4>Background</h4><p>The paired test is simply a one-sample t-test on the differences. Because each subject acts as his/her own control, between-person variability is removed, making the test much more powerful than an unpaired test. Using an unpaired test on paired data is a common thesis error.</p>
+<h4>Data layout</h4><p>One row per subject, two columns (e.g. SBP_baseline, SBP_week12).</p>
+<h4>If assumptions fail</h4><p>Wilcoxon signed-rank test (paired).</p>
+
+<!-- TEST:anova1 -->
+<h3>One-way ANOVA</h3>
+<p class="lead"><b>Purpose:</b> compare means of a numeric outcome across <b>3 or more independent groups</b>. <i>Example:</i> SBP in Drug A, Drug B and Placebo.</p>
+<h4>Why not multiple t-tests?</h4><p>Three t-tests at &alpha; = 0.05 inflate the overall false-positive rate to about 14%. ANOVA tests all groups in one step.</p>
+<h4>Hypotheses</h4><p>H<sub>0</sub>: &mu;<sub>1</sub> = &mu;<sub>2</sub> = ... = &mu;<sub>k</sub>; H<sub>1</sub>: at least one mean differs.</p>
+<h4>Assumptions</h4><ul><li>Independent observations.</li><li>Normality within each group.</li><li>Homogeneity of variances (Levene). If violated &rarr; Welch's ANOVA + Games-Howell type post-hoc.</li></ul>
+<h4>Formulae</h4>
+\[SS_B = \sum_j n_j(\bar x_j - \bar x)^2,\quad SS_W = \sum_j\sum_i (x_{ij}-\bar x_j)^2\]
+\[MS_B = \frac{SS_B}{k-1},\quad MS_W = \frac{SS_W}{N-k},\quad F = \frac{MS_B}{MS_W},\quad \eta^2 = \frac{SS_B}{SS_T}\]
+<h4>Background</h4><p>Developed by R.A. Fisher (1920s). ANOVA compares two estimates of variance: one from the spread of group means (between) and one from the spread within groups. If H<sub>0</sub> is true, both estimate the same population variance and F &asymp; 1. A large F means the group means are more spread out than chance would produce.</p>
+<h4>Post-hoc tests</h4><p>A significant F only says "some difference exists". <b>Tukey's HSD</b> compares all pairs while controlling the family-wise error rate. If variances are unequal, use the pairwise Welch tests (Holm-adjusted).</p>
+<h4>If assumptions fail</h4><p>Kruskal-Wallis test.</p>
+
+<!-- TEST:anova2 -->
+<h3>Two-way (factorial) ANOVA</h3>
+<p class="lead"><b>Purpose:</b> study the effect of <b>two factors</b> and their <b>interaction</b> on a numeric outcome. <i>Example:</i> effect of Drug group and Sex on SBP &ndash; does the drug work differently in men and women?</p>
+<h4>Model</h4>\[y_{ijk} = \mu + \alpha_i + \beta_j + (\alpha\beta)_{ij} + \varepsilon_{ijk}\]
+<h4>Interpretation</h4><ul><li><b>Main effect A</b>: does the outcome differ across levels of A (averaged over B)?</li><li><b>Interaction A&times;B</b>: does the effect of A depend on B? If significant, interpret simple effects rather than main effects; the interaction plot shows non-parallel lines.</li></ul>
+<h4>Type III sums of squares</h4><p>With unequal cell sizes (usual in clinical data), sequential (Type I) SS depend on the order of factors. Type III SS test each effect adjusted for all others, matching SPSS default output.</p>
+\[\eta_p^2 = \frac{SS_{effect}}{SS_{effect}+SS_{error}}\]
+
+<!-- TEST:rm_anova -->
+<h3>Repeated-measures ANOVA</h3>
+<p class="lead"><b>Purpose:</b> compare means of the same subjects measured at <b>3 or more time points</b> (e.g. SBP at baseline, 4, 8, 12 weeks).</p>
+<h4>Data layout</h4><p>Wide format: one row per subject, one column per time point. Select the columns in time order.</p>
+<h4>Assumptions</h4><ul><li>Normality of residuals.</li><li><b>Sphericity</b>: variances of differences between all pairs of time points are equal. Tested by <b>Mauchly's test</b>. If violated (p &lt; 0.05), use the <b>Greenhouse-Geisser</b> correction, which multiplies the df by &epsilon; (&le; 1).</li></ul>
+<h4>Formula</h4>\[F = \frac{SS_{time}/(k-1)}{SS_{error}/[(n-1)(k-1)]}\qquad \varepsilon_{GG} = \frac{\left(\sum\lambda_i\right)^2}{(k-1)\sum\lambda_i^2}\]
+<h4>Background</h4><p>Total variability is partitioned into between-subject variation (removed, as each subject is his/her own control), time effect, and residual error. This makes the design efficient. Post-hoc comparisons use paired t-tests with Bonferroni correction.</p>
+<h4>If assumptions fail</h4><p>Friedman test. For missing time points or unequal spacing, PGs should consider linear mixed models.</p>
+
+<!-- TEST:ancova -->
+<h3>ANCOVA (analysis of covariance)</h3>
+<p class="lead"><b>Purpose:</b> compare group means while <b>adjusting for a continuous covariate</b>, typically the baseline value. <i>Example:</i> SBP at week 12 between drugs, adjusted for baseline SBP &ndash; the recommended analysis for RCTs with a baseline measurement.</p>
+<h4>Model</h4>\[Y_{ij} = \mu + \tau_j + \beta(X_{ij}-\bar X) + \varepsilon_{ij}\qquad \bar Y_j^{adj} = \bar Y_j - b_w(\bar X_j - \bar X)\]
+<h4>Assumptions</h4><ul><li>Linear relation between covariate and outcome.</li><li><b>Homogeneity of regression slopes</b> (no group &times; covariate interaction).</li><li>Normal residuals, equal variances.</li></ul>
+<h4>Background</h4><p>ANCOVA removes outcome variation explained by the covariate, reducing error variance and increasing power, and corrects for chance baseline imbalance. It is more powerful than analysing change scores.</p>

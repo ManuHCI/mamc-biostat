@@ -41,11 +41,6 @@ needed_tree <- function() {
 }
 
 if (!all(vapply(pkgs, loads, logical(1)))) {
-  if (file.exists(file.path(here, "OFFLINE-BUNDLE"))) {
-    bad <- pkgs[!vapply(pkgs, loads, logical(1))]
-    stop("Bundled packages could not load: ", paste(bad, collapse = ", "),
-         ". Please reinstall MAMC BioStat. No packages were downloaded.", call. = FALSE)
-  }
   message("\n  First run: setting up MAMC BioStat (internet needed once, about 2-5 minutes) ...\n")
   for (attempt in 1:2) {
     tree <- needed_tree()

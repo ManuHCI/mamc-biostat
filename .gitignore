@@ -5,5 +5,3 @@ tools/chart_test_out/
 .Rhistory
 .RData
 *.Rproj.user
-__pycache__/
-*.pyc

@@ -1,0 +1,204 @@
+<!-- TEST:wilcox_one -->
+<h3>Wilcoxon signed-rank test (one sample)</h3>
+<p class="lead"><b>Purpose:</b> non-parametric alternative to the one-sample t-test: is the median different from a hypothesised value? <i>Example:</i> is median pain score different from 5?</p>
+<h4>Assumptions</h4><ul><li>Independent observations; data at least ordinal; distribution of differences roughly symmetric.</li></ul>
+<h4>Method</h4><ol><li>Compute d<sub>i</sub> = x<sub>i</sub> &minus; m<sub>0</sub>, drop zeros.</li><li>Rank |d<sub>i</sub>|; V = sum of ranks of positive d<sub>i</sub>.</li></ol>
+\[E(V) = \frac{n(n+1)}{4},\quad Var(V) = \frac{n(n+1)(2n+1)}{24},\quad z = \frac{V-E(V)}{\sqrt{Var(V)}},\quad r = \frac{|z|}{\sqrt n}\]
+<h4>Background</h4><p>Frank Wilcoxon (1945). By using ranks instead of raw values, extreme values lose their influence, and no normality assumption is required. Exact p-values are used for small samples without ties.</p>
+
+<!-- TEST:mann_whitney -->
+<h3>Mann-Whitney U test (Wilcoxon rank-sum)</h3>
+<p class="lead"><b>Purpose:</b> non-parametric alternative to the independent t-test for <b>two independent groups</b> with skewed or ordinal data. <i>Example:</i> CRP in smokers vs non-smokers.</p>
+<h4>Hypotheses</h4><p>H<sub>0</sub>: the two distributions are identical; i.e. P(X<sub>1</sub> &gt; X<sub>2</sub>) = 0.5. If the distributions have similar shape, this is a test of equal medians.</p>
+<h4>Formulae</h4>
+\[U_1 = R_1 - \frac{n_1(n_1+1)}{2},\qquad U = \min(U_1, n_1n_2-U_1)\]
+\[z = \frac{U - n_1n_2/2}{\sqrt{\frac{n_1n_2(n_1+n_2+1)}{12}}},\qquad r = \frac{|z|}{\sqrt N}\]
+<h4>Background</h4><p>U counts, over all n<sub>1</sub>&times;n<sub>2</sub> possible pairs, how often a value from group 1 exceeds a value from group 2. U/(n<sub>1</sub>n<sub>2</sub>) is the "probability of superiority" &ndash; the same quantity as the AUC of an ROC curve. Report medians (IQR), U, p, and r (0.1 small, 0.3 medium, 0.5 large).</p>
+<p><b>Note:</b> R reports W (= U<sub>1</sub>); SPSS reports the smaller U. Both give the same p-value.</p>
+
+<!-- TEST:wilcox_paired -->
+<h3>Wilcoxon signed-rank test (paired)</h3>
+<p class="lead"><b>Purpose:</b> non-parametric alternative to the paired t-test. <i>Example:</i> pain score before and after treatment.</p>
+<h4>Method</h4><ol><li>For each subject compute the difference (after &minus; before); drop zero differences.</li><li>Rank absolute differences; give each rank the sign of its difference.</li><li>V = sum of positive ranks; compare with its distribution under H<sub>0</sub>.</li></ol>
+\[z = \frac{V - n(n+1)/4}{\sqrt{n(n+1)(2n+1)/24}},\qquad r = \frac{|z|}{\sqrt n}\]
+<h4>Background</h4><p>Unlike the simpler sign test (which only counts + and &minus;), the signed-rank test also uses the size of the changes, so it is more powerful. Hodges-Lehmann estimate = median of all pairwise averages of differences, a robust estimate of the typical change.</p>
+
+<!-- TEST:kruskal -->
+<h3>Kruskal-Wallis H test</h3>
+<p class="lead"><b>Purpose:</b> non-parametric alternative to one-way ANOVA for <b>3+ independent groups</b>.</p>
+<h4>Formula</h4>\[H = \frac{12}{N(N+1)}\sum_{j=1}^{k}\frac{R_j^2}{n_j} - 3(N+1)\quad\sim\chi^2_{k-1},\qquad \varepsilon^2 = \frac{H}{N-1}\]
+<p>(divided by a tie-correction factor \(1-\sum(t^3-t)/(N^3-N)\)).</p>
+<h4>Post-hoc: Dunn's test</h4>\[z_{ij} = \frac{\bar R_i - \bar R_j}{\sqrt{\left[\frac{N(N+1)}{12} - \frac{\sum(t^3-t)}{12(N-1)}\right]\left(\frac1{n_i}+\frac1{n_j}\right)}}\]
+<p>p-values adjusted with the Holm method. Dunn's test uses the same pooled ranks as Kruskal-Wallis, which is why it is preferred over separate Mann-Whitney tests.</p>
+
+<!-- TEST:friedman -->
+<h3>Friedman test</h3>
+<p class="lead"><b>Purpose:</b> non-parametric alternative to repeated-measures ANOVA (same subjects, 3+ conditions / time points).</p>
+<h4>Formula</h4>\[\chi^2_F = \frac{12}{nk(k+1)}\sum_{j=1}^k R_j^2 - 3n(k+1),\qquad W = \frac{\chi^2_F}{n(k-1)}\]
+<p>Ranks are assigned <i>within each subject</i> (row). R<sub>j</sub> is the sum of ranks for condition j. Kendall's W (0-1) is the effect size. Post-hoc: pairwise Wilcoxon signed-rank tests with Bonferroni correction.</p>
+
+<!-- TEST:chisq_ind -->
+<h3>Chi-square test of independence</h3>
+<p class="lead"><b>Purpose:</b> test association between <b>two categorical variables</b>. <i>Example:</i> is improvement (Yes/No) associated with drug group?</p>
+<h4>Hypotheses</h4><p>H<sub>0</sub>: the variables are independent.</p>
+<h4>Assumptions</h4><ul><li>Each subject counted once (independent).</li><li>Expected count &ge; 5 in at least 80% of cells and none &lt; 1. Otherwise use <b>Fisher's exact test</b>.</li></ul>
+<h4>Formulae</h4>
+\[E_{ij} = \frac{R_i \times C_j}{N},\qquad \chi^2 = \sum\frac{(O_{ij}-E_{ij})^2}{E_{ij}},\qquad df = (r-1)(c-1)\]
+\[V = \sqrt{\frac{\chi^2}{N(\min(r,c)-1)}}\quad\text{(Cram\'er's V)}\]
+<h4>Background</h4><p>Karl Pearson (1900). If two variables are independent, the expected count in each cell follows from the margins. The chi-square statistic adds up squared deviations between observed and expected counts, scaled by expected counts. Standardised residuals (&gt; |1.96|) show which cells drive the association. Yates' continuity correction (2&times;2) is conservative and many statisticians prefer the uncorrected test or Fisher's test.</p>
+
+<!-- TEST:chisq_gof -->
+<h3>Chi-square goodness-of-fit</h3>
+<p class="lead"><b>Purpose:</b> does the distribution of one categorical variable match an expected distribution? <i>Examples:</i> are blood groups distributed as in the Indian population? Are births equal across weekdays?</p>
+\[\chi^2 = \sum_{i=1}^k\frac{(O_i - Np_i)^2}{Np_i},\qquad df = k-1\]
+<p>Enter expected proportions in the same order as categories (alphabetical), e.g. "0.37, 0.32, 0.22, 0.09". Leave blank to test equal proportions.</p>
+
+<!-- TEST:fisher -->
+<h3>Fisher's exact test</h3>
+<p class="lead"><b>Purpose:</b> test association in contingency tables when samples are small (expected counts &lt; 5).</p>
+\[P = \frac{(a+b)!\,(c+d)!\,(a+c)!\,(b+d)!}{N!\;a!\;b!\;c!\;d!}\]
+<h4>Background</h4><p>R.A. Fisher (the "lady tasting tea" experiment). With row and column totals fixed, the probability of each possible table follows the hypergeometric distribution. The p-value is the total probability of all tables as or less probable than the observed one. It is exact &ndash; no large-sample approximation. For large R&times;C tables, a Monte-Carlo p-value is computed.</p>
+
+<!-- TEST:mcnemar -->
+<h3>McNemar test</h3>
+<p class="lead"><b>Purpose:</b> compare two <b>paired proportions</b>: the same subjects classified twice (before/after, two diagnostic tests on the same patients).</p>
+<table class="helptab"><tr><th></th><th>Time 2 +</th><th>Time 2 &minus;</th></tr><tr><th>Time 1 +</th><td>a</td><td>b</td></tr><tr><th>Time 1 &minus;</th><td>c</td><td>d</td></tr></table>
+\[\chi^2 = \frac{(|b-c|-1)^2}{b+c},\quad df = 1\]
+<p>Only discordant pairs (b, c) carry information about change. If b + c &lt; 25, the exact binomial test is used. Using an ordinary chi-square on paired data is wrong because observations are not independent.</p>
+
+<!-- TEST:or_rr -->
+<h3>Odds ratio, relative risk, risk difference, NNT</h3>
+<table class="helptab"><tr><th></th><th>Event +</th><th>Event &minus;</th></tr><tr><th>Exposed</th><td>a</td><td>b</td></tr><tr><th>Not exposed</th><td>c</td><td>d</td></tr></table>
+\[OR = \frac{ad}{bc},\quad SE(\ln OR) = \sqrt{\tfrac1a+\tfrac1b+\tfrac1c+\tfrac1d}\]
+\[RR = \frac{a/(a+b)}{c/(c+d)},\quad SE(\ln RR) = \sqrt{\tfrac1a-\tfrac1{a+b}+\tfrac1c-\tfrac1{c+d}}\]
+\[ARR = R_1 - R_0,\qquad NNT = \frac{1}{|ARR|},\qquad 95\%\,CI = e^{\ln(\text{ratio})\pm1.96\,SE}\]
+<h4>Which to use?</h4><ul><li><b>Cohort studies / RCTs</b>: RR (risk can be measured directly), ARR and NNT.</li><li><b>Case-control studies</b>: OR only (risk cannot be estimated because cases are sampled).</li><li>OR &asymp; RR when the outcome is rare (&lt; 10%).</li></ul>
+<p>RR or OR = 1 means no association; a CI including 1 means not significant. NNT = number of patients to treat to prevent one bad outcome.</p>
+
+<!-- TEST:prop_one -->
+<h3>One-sample proportion test</h3>
+<p class="lead"><b>Purpose:</b> compare an observed proportion with a known value. <i>Example:</i> is the smoking prevalence in our sample different from the national 25%?</p>
+\[z = \frac{\hat p - p_0}{\sqrt{p_0(1-p_0)/n}}\]
+<p>The exact binomial test sums binomial probabilities and is preferred for small n.</p>
+
+<!-- TEST:prop_two -->
+<h3>Two-proportion z-test</h3>
+<p class="lead"><b>Purpose:</b> compare a proportion between two independent groups (e.g. % improved in males vs females).</p>
+\[\bar p = \frac{x_1+x_2}{n_1+n_2},\qquad z = \frac{\hat p_1-\hat p_2}{\sqrt{\bar p(1-\bar p)\left(\frac1{n_1}+\frac1{n_2}\right)}}\]
+<p>Equivalent to the 2&times;2 chi-square test (z&sup2; = &chi;&sup2;). The CI of the difference is reported.</p>
+
+<!-- TEST:pearson -->
+<h3>Pearson correlation coefficient (r)</h3>
+<p class="lead"><b>Purpose:</b> measure the strength and direction of a <b>linear</b> relationship between two numeric variables. <i>Example:</i> SBP by mercury sphygmomanometer vs digital device.</p>
+\[r = \frac{\sum (x_i-\bar x)(y_i-\bar y)}{\sqrt{\sum(x_i-\bar x)^2\sum(y_i-\bar y)^2}},\qquad t = \frac{r\sqrt{n-2}}{\sqrt{1-r^2}},\; df = n-2\]
+<h4>Interpretation</h4><p>&minus;1 to +1. |r| &lt; 0.3 weak, 0.3-0.5 moderate, 0.5-0.7 strong, &gt; 0.7 very strong. r&sup2; = proportion of shared variance.</p>
+<h4>Assumptions & caveats</h4><ul><li>Linear relation; both approximately normal; no major outliers (one outlier can create or destroy a correlation).</li><li>Correlation &ne; causation.</li><li>Correlation &ne; agreement: two methods can correlate perfectly yet differ by 20 mmHg. Use Bland-Altman for method comparison.</li></ul>
+<p>CI uses Fisher's z-transformation \(z = \tfrac12\ln\frac{1+r}{1-r}\), SE = 1/&radic;(n&minus;3).</p>
+
+<!-- TEST:spearman -->
+<h3>Spearman's rank correlation (&rho;) and Kendall's &tau;</h3>
+<p class="lead"><b>Purpose:</b> measure <b>monotonic</b> association when data are skewed, ordinal, or contain outliers.</p>
+\[\rho = 1 - \frac{6\sum d_i^2}{n(n^2-1)}\quad(\text{no ties}),\qquad \tau = \frac{n_c - n_d}{\tfrac12 n(n-1)}\]
+<p>d<sub>i</sub> = difference between the ranks of x<sub>i</sub> and y<sub>i</sub>. Spearman = Pearson correlation applied to ranks. Kendall's &tau; counts concordant vs discordant pairs; it is more robust for small samples with many ties.</p>
+
+<!-- TEST:corr_matrix -->
+<h3>Correlation matrix</h3>
+<p>Computes pairwise correlations among many variables at once and displays a heat-map. Useful for exploring data and checking multicollinearity before regression. Beware of multiple testing: with k variables there are k(k&minus;1)/2 tests.</p>
+
+<!-- TEST:lin_reg -->
+<h3>Linear regression (simple and multiple)</h3>
+<p class="lead"><b>Purpose:</b> predict a numeric outcome from one or more predictors and estimate the <b>independent effect</b> of each predictor, adjusting for others (confounders).</p>
+<h4>Model</h4>\[Y = \beta_0 + \beta_1X_1 + \dots + \beta_kX_k + \varepsilon,\qquad \hat\beta = (X^TX)^{-1}X^Ty\]
+Simple regression: \[b_1 = \frac{\sum(x-\bar x)(y-\bar y)}{\sum(x-\bar x)^2},\quad b_0 = \bar y - b_1\bar x\]
+\[R^2 = 1-\frac{SS_{res}}{SS_{tot}},\qquad R^2_{adj} = 1-(1-R^2)\frac{n-1}{n-k-1}\]
+<h4>Interpretation</h4><ul><li><b>B</b>: change in Y per 1-unit increase in X, holding other predictors constant. For a categorical predictor: difference from the reference (first) category.</li><li><b>Standardised &beta;</b>: allows comparison of predictors measured in different units.</li><li><b>R&sup2;</b>: proportion of variance in Y explained.</li></ul>
+<h4>Assumptions (LINE)</h4><ul><li><b>L</b>inearity, <b>I</b>ndependence, <b>N</b>ormal residuals, <b>E</b>qual variance (homoscedasticity) &ndash; check the diagnostic plots.</li><li>No severe multicollinearity (VIF &lt; 5-10).</li><li>Rule of thumb: at least 10-15 observations per predictor.</li></ul>
+<h4>Background</h4><p>"Regression" was named by Francis Galton (1886) who noticed that children of very tall parents were tall but closer to average &ndash; "regression to the mean". The method of least squares (Legendre, Gauss) finds the line minimising the sum of squared vertical distances.</p>
+
+<!-- TEST:log_reg -->
+<h3>Binary logistic regression</h3>
+<p class="lead"><b>Purpose:</b> model a <b>binary outcome</b> (died / survived, complication yes / no) from several predictors, giving <b>adjusted odds ratios</b>.</p>
+\[\ln\left(\frac{p}{1-p}\right) = \beta_0 + \beta_1X_1+\dots+\beta_kX_k,\qquad p = \frac{1}{1+e^{-(\beta_0+\beta_1X_1+\dots)}}\]
+\[OR_j = e^{\beta_j},\qquad 95\%\,CI = e^{\beta_j\pm1.96\,SE}\]
+<h4>Why not linear regression?</h4><p>A probability must stay between 0 and 1; the logit (log-odds) transformation maps it onto the whole real line, where a linear model works.</p>
+<h4>Model checks</h4><ul><li><b>Likelihood-ratio test</b>: is the model better than no predictors?</li><li><b>Nagelkerke R&sup2;</b>: pseudo-R&sup2; (0-1).</li><li><b>Hosmer-Lemeshow test</b>: calibration; p &gt; 0.05 = good fit.</li><li><b>AUC (C-statistic)</b>: discrimination.</li><li><b>Events per variable (EPV) &ge; 10</b>: otherwise estimates are unreliable.</li></ul>
+<p>Coefficients are estimated by maximum likelihood (iteratively reweighted least squares).</p>
+
+<!-- TEST:kappa -->
+<h3>Cohen's kappa</h3>
+<p class="lead"><b>Purpose:</b> agreement between two raters / methods for a <b>categorical</b> rating, corrected for chance. <i>Example:</i> two radiologists grading X-rays as mild/moderate/severe.</p>
+\[\kappa = \frac{P_o - P_e}{1-P_e},\qquad P_e = \sum_i p_{i\cdot}\,p_{\cdot i}\]
+<p>Weighted kappa (linear or quadratic weights) gives partial credit for near-agreement in ordered categories; quadratic weighted kappa is mathematically equivalent to the ICC. Landis &amp; Koch: &le;0.2 slight, 0.21-0.4 fair, 0.41-0.6 moderate, 0.61-0.8 substantial, &gt;0.8 almost perfect. SE by Fleiss-Cohen-Everitt (1969).</p>
+
+<!-- TEST:bland_altman -->
+<h3>Bland-Altman analysis</h3>
+<p class="lead"><b>Purpose:</b> assess <b>agreement</b> between two methods measuring the same numeric quantity (e.g. a new digital BP device vs mercury sphygmomanometer; glucometer vs lab glucose).</p>
+\[\text{bias} = \bar d,\qquad LoA = \bar d \pm 1.96\,s_d\]
+<h4>Background</h4><p>J.M. Bland &amp; D.G. Altman (Lancet, 1986) showed that correlation is inappropriate for method comparison: correlation measures association, not agreement, and depends on the range of values. Plotting differences against averages shows the bias and the range within which 95% of differences lie. Whether the limits are clinically acceptable must be decided <b>a priori</b> from clinical knowledge.</p>
+
+<!-- TEST:icc -->
+<h3>Intraclass correlation coefficient (ICC)</h3>
+<p class="lead"><b>Purpose:</b> reliability / agreement of <b>numeric</b> measurements by 2+ raters or repeated measurements (test-retest).</p>
+\[ICC(2,1) = \frac{MS_R - MS_E}{MS_R + (k-1)MS_E + \frac{k}{n}(MS_C - MS_E)},\qquad ICC(3,1) = \frac{MS_R - MS_E}{MS_R+(k-1)MS_E}\]
+<p>MS<sub>R</sub> = between-subjects mean square, MS<sub>C</sub> = between-raters, MS<sub>E</sub> = error (two-way ANOVA). Shrout &amp; Fleiss (1979) / McGraw &amp; Wong (1996) forms. Koo &amp; Li (2016): &lt;0.5 poor, 0.5-0.75 moderate, 0.75-0.9 good, &gt;0.9 excellent. Report the ICC form, e.g. "ICC(2,1), two-way random, absolute agreement".</p>
+
+<!-- TEST:diag -->
+<h3>Diagnostic test accuracy</h3>
+<table class="helptab"><tr><th></th><th>Disease +</th><th>Disease &minus;</th></tr><tr><th>Test +</th><td>TP</td><td>FP</td></tr><tr><th>Test &minus;</th><td>FN</td><td>TN</td></tr></table>
+\[Sens = \frac{TP}{TP+FN},\quad Spec = \frac{TN}{TN+FP},\quad PPV = \frac{TP}{TP+FP},\quad NPV = \frac{TN}{TN+FN}\]
+\[LR+ = \frac{Sens}{1-Spec},\qquad LR- = \frac{1-Sens}{Spec},\qquad \text{Post-test odds} = \text{Pre-test odds}\times LR\]
+<h4>Key points</h4><ul><li>Sensitivity and specificity are properties of the test; PPV and NPV depend on prevalence.</li><li><b>SnNout</b>: a highly Sensitive test, when Negative, rules OUT disease (good for screening).</li><li><b>SpPin</b>: a highly Specific test, when Positive, rules IN disease (good for confirmation).</li><li>Report following the STARD guideline.</li></ul>
+
+<!-- TEST:roc -->
+<h3>ROC curve and AUC</h3>
+<p class="lead"><b>Purpose:</b> evaluate a <b>numeric</b> diagnostic marker across all possible cut-offs and choose the best cut-off. <i>Example:</i> procalcitonin for sepsis.</p>
+<p>The ROC (Receiver Operating Characteristic) curve plots sensitivity against 1 &minus; specificity for every cut-off. The <b>area under the curve (AUC)</b> = probability that a randomly chosen diseased patient has a higher marker value than a randomly chosen non-diseased patient.</p>
+\[AUC = \frac{U}{n_1 n_0},\qquad J = Sens + Spec - 1\]
+<p>AUC 0.5 = useless (coin toss), 0.7-0.8 acceptable, 0.8-0.9 good, &gt;0.9 excellent. The SE follows Hanley &amp; McNeil (1982). Youden's J identifies the cut-off maximising Sens + Spec. Background: ROC analysis originated in World War II radar signal detection.</p>
+
+<!-- TEST:cronbach -->
+<h3>Cronbach's alpha</h3>
+<p class="lead"><b>Purpose:</b> internal consistency of a questionnaire / scale &ndash; do the items measure the same construct?</p>
+\[\alpha = \frac{k}{k-1}\left(1-\frac{\sum s_i^2}{s_T^2}\right)\]
+<p>k = number of items, s<sub>i</sub>&sup2; = item variances, s<sub>T</sub>&sup2; = variance of total score. &ge; 0.7 acceptable, &ge; 0.8 good, &ge; 0.9 excellent (&gt; 0.95 may mean redundant items). Recode reverse-worded items first. Items with corrected item-total correlation &lt; 0.3 are candidates for removal.</p>
+
+<!-- TEST:km -->
+<h3>Kaplan-Meier survival analysis and log-rank test</h3>
+<p class="lead"><b>Purpose:</b> estimate the probability of surviving (remaining event-free) over time when follow-up is incomplete (<b>censored</b>) and compare groups.</p>
+<h4>Data required</h4><ul><li><b>Time</b>: from start (diagnosis, randomisation) to event or last follow-up.</li><li><b>Status</b>: 1 = event occurred (death, relapse), 0 = censored.</li></ul>
+\[\hat S(t) = \prod_{t_i\le t}\left(1-\frac{d_i}{n_i}\right)\]
+<p>n<sub>i</sub> = number at risk just before t<sub>i</sub>, d<sub>i</sub> = events at t<sub>i</sub>. Greenwood's formula gives the variance.</p>
+<h4>Log-rank test</h4>\[\chi^2 = \frac{(O_1-E_1)^2}{Var(O_1-E_1)},\qquad E_{1i} = d_i\frac{n_{1i}}{n_i}\]
+<p>Compares observed events with those expected if survival were identical, summing over all event times. Assumes censoring is non-informative and hazards roughly proportional.</p>
+<h4>Background</h4><p>Kaplan &amp; Meier (1958) &ndash; one of the most cited statistics papers ever. Simply calculating "% died" ignores time and loses information from censored subjects.</p>
+
+<!-- TEST:cox -->
+<h3>Cox proportional hazards regression</h3>
+<p class="lead"><b>Purpose:</b> assess the effect of several predictors on survival time, giving <b>adjusted hazard ratios</b>.</p>
+\[h(t\mid X) = h_0(t)\exp(\beta_1X_1+\dots+\beta_kX_k),\qquad HR = e^{\beta}\]
+<p>HR &gt; 1: higher hazard (worse survival); HR &lt; 1: protective. The baseline hazard h<sub>0</sub>(t) is not estimated (semi-parametric) &ndash; Sir David Cox's (1972) key insight via partial likelihood.</p>
+<h4>Assumption</h4><p><b>Proportional hazards</b>: the HR is constant over time (KM curves should not cross). Tested with Schoenfeld residuals (p &lt; 0.05 suggests violation). C-index (concordance) measures discrimination like AUC.</p>
+
+<!-- TEST:ss_means -->
+<h3>Sample size for comparing two means</h3>
+\[n = \frac{2\,(Z_{1-\alpha/2}+Z_{1-\beta})^2\,\sigma^2}{\Delta^2}\quad\text{per group}\qquad\text{(paired: } n = \frac{(Z_{1-\alpha/2}+Z_{1-\beta})^2\sigma_d^2}{\Delta^2}\text{)}\]
+<p>Z<sub>1&minus;&alpha;/2</sub> = 1.96 for &alpha; = 0.05; Z<sub>1&minus;&beta;</sub> = 0.84 for 80% power, 1.28 for 90%. &sigma; from a pilot study or published literature; &Delta; = minimum clinically important difference (decided clinically, not statistically). The exact method uses the t distribution (R <code>power.t.test</code>). Always inflate for dropout: n<sub>final</sub> = n / (1 &minus; dropout).</p>
+<h4>Why calculate sample size?</h4><p>Too small a study may miss a real effect (type II error) &ndash; an unethical waste of patients' participation. Ethics committees and the NMC thesis guidelines require a justified sample size.</p>
+
+<!-- TEST:ss_props -->
+<h3>Sample size for comparing two proportions</h3>
+\[n = \frac{\left[Z_{1-\alpha/2}\sqrt{2\bar p(1-\bar p)} + Z_{1-\beta}\sqrt{p_1(1-p_1)+p_2(1-p_2)}\right]^2}{(p_1-p_2)^2}\]
+<p>p<sub>1</sub>, p<sub>2</sub> = expected proportions with the outcome in each group (from literature / pilot). Smaller differences need much larger samples.</p>
+
+<!-- TEST:ss_prev -->
+<h3>Sample size to estimate a prevalence</h3>
+\[n = \frac{Z_{1-\alpha/2}^2\,p(1-p)}{d^2}\qquad\text{Finite population: } n' = \frac{n}{1+\frac{n-1}{N}}\]
+<p>p = expected prevalence, d = absolute precision (margin of error). Example: p = 20%, d = 5% &rarr; n = 1.96&sup2;&times;0.2&times;0.8/0.05&sup2; = 246. For cluster sampling multiply by the design effect (often 1.5-2). If p is unknown, use 0.5 (maximum n). Commonly used in community medicine cross-sectional studies.</p>
+
+<!-- TEST:ss_corr -->
+<h3>Sample size to detect a correlation</h3>
+\[C = \tfrac12\ln\frac{1+r}{1-r},\qquad n = \left(\frac{Z_{1-\alpha/2}+Z_{1-\beta}}{C}\right)^2 + 3\]
+
+<!-- TEST:ss_anova -->
+<h3>Sample size for one-way ANOVA</h3>
+<p>Based on Cohen's effect size \(f = \sigma_{means}/\sigma\) (0.1 small, 0.25 medium, 0.4 large) and the non-central F distribution (R <code>power.anova.test</code>). Enter expected group means and the common within-group SD.</p>
