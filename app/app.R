@@ -4,7 +4,7 @@
 #  Developed by the faculty of Maulana Azad Medical College & Lok Nayak Hospital, New Delhi
 #  Licence: GNU GPL-3.0   |   Engine: R
 # =====================================================================
-APP_VERSION <- "1.1.0"
+APP_VERSION <- "1.1.1"
 suppressPackageStartupMessages({ library(shiny); library(readxl); library(DT); library(ggplot2) })
 options(shiny.maxRequestSize = 100 * 1024^2, warn = 1)
 
