@@ -164,7 +164,16 @@ logDir = sh.ExpandEnvironmentStrings("%LOCALAPPDATA%") & "\MAMC BioStat"
 If Not fso.FolderExists(logDir) Then fso.CreateFolder(logDir)
 logFile = logDir & "\last_run.log"
 rc = sh.Run("cmd /c """"" & rs & """ """ & d & "\launcher.R"" > """ & logFile & """ 2>&1""", 0, True)
-If rc <> 0 Then
+' R sometimes returns a non-zero code while shutting down after a normal session;
+' only report a problem if the program never reached the "Listening on" stage
+started = False
+If fso.FileExists(logFile) Then
+  Set f = fso.OpenTextFile(logFile, 1)
+  If Not f.AtEndOfStream Then txt = f.ReadAll Else txt = ""
+  f.Close
+  If InStr(txt, "Listening on") > 0 Then started = True
+End If
+If rc <> 0 And Not started Then
   MsgBox "MAMC BioStat could not start." & vbCrLf & vbCrLf & "Details are saved in:" & vbCrLf & logFile, 16, "MAMC BioStat"
 End If
 '''
