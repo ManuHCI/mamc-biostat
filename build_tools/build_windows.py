@@ -74,7 +74,8 @@ def extract_r(installer, target):
 
 def parse_dcf(text):
     pkgs = {}
-    for block in text.split("\n\n"):
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    for block in re.split(r"\n[ \t]*\n", text):
         rec, key = {}, None
         for line in block.splitlines():
             if line[:1].isspace() and key:
@@ -85,6 +86,34 @@ def parse_dcf(text):
         if "Package" in rec:
             pkgs[rec["Package"]] = rec
     return pkgs
+
+
+FALLBACK_R = "4.5.3"
+
+
+def packages_complete(r_minor):
+    """True if every needed package (and dependency) has a Windows binary for this R series."""
+    try:
+        index = parse_dcf(fetch(f"{CRAN}/bin/windows/contrib/{r_minor}/PACKAGES", binary=False))
+    except Exception:
+        return False
+    seen, queue = set(), list(APP_PACKAGES)
+    while queue:
+        p = queue.pop()
+        if p in seen or p in BASE_PKGS:
+            continue
+        if p not in index:
+            log(f"  {p} has no Windows binary for R {r_minor} yet")
+            return False
+        seen.add(p)
+        for f in ("Depends", "Imports", "LinkingTo"):
+            queue += dep_names(index[p].get(f))
+    return True
+
+
+BASE_PKGS = {"base", "compiler", "datasets", "graphics", "grDevices", "grid", "methods", "parallel", "splines", "stats",
+             "stats4", "tcltk", "tools", "utils", "survival", "MASS", "lattice", "Matrix", "nlme", "mgcv", "boot", "class",
+             "cluster", "codetools", "foreign", "KernSmooth", "nnet", "rpart", "spatial"}
 
 
 def dep_names(field):
@@ -222,6 +251,9 @@ def main():
     a = ap.parse_args()
     prof = PROFILES[a.profile]
     r_version = a.r_version or prof["r_version"] or latest_r_version()
+    if not packages_complete(".".join(r_version.split(".")[:2])):
+        log(f"some packages are not yet built for R {r_version} - using R {FALLBACK_R}")
+        r_version = FALLBACK_R
     r_minor = ".".join(r_version.split(".")[:2])
     log(f"MAMC BioStat {APP_VERSION} for {prof['label']} with R {r_version}")
 
