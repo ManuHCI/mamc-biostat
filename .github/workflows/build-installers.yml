@@ -134,16 +134,37 @@ jobs:
         with:
           files: out/*
           body: |
-            ## MAMC BioStat - free, open-source biostatistics software
+            ## MAMC BioStat – free, open-source biostatistics software
             Maulana Azad Medical College & Lok Nayak Hospital, New Delhi
 
-            **Which file do I download?**
-            | Computer | File |
+            ---
+
+            ### ⚠️ Please read before installing (takes 1 minute)
+            MAMC BioStat is **safe**, free software made by MAMC faculty. Because it is new and not yet "signed" with a paid Microsoft / Apple certificate, your computer will show a **warning the first time**. This is normal – follow the steps below.
+
+            #### 🪟 Windows – when the blue box "Windows protected your PC" appears
+            1. Click the small underlined words **More info** (just below the message).
+            2. A new button **Run anyway** appears at the bottom – click it.
+            3. Click **Next → Install → Finish**. Open **MAMC BioStat** from the icon on your Desktop.
+
+            > Do **not** click "Don't run" – that cancels the installation.
+            > If your browser (Edge/Chrome) says the file "isn't commonly downloaded", click **⋯ / ^** next to the download → **Keep** → **Keep anyway**.
+
+            #### 🍎 Mac – when it says the app "cannot be opened"
+            1. Open the downloaded **.dmg** and drag **MAMC BioStat** into **Applications**.
+            2. In Applications, **right-click** (or Control-click) MAMC BioStat → **Open** → **Open**.
+            3. On newer Macs (macOS 15): open **System Settings → Privacy & Security**, scroll down, click **Open Anyway**.
+            4. The first time, the app may offer to install **R** (included) – click **Install R**, enter your Mac password, then open MAMC BioStat again.
+
+            ---
+
+            ### Which file do I download? (scroll down to **Assets**)
+            | Your computer | Download this file |
             |---|---|
             | Windows 10 / 11 | `MAMC_BioStat_Setup_..._Windows10-11.exe` |
             | Windows 7 / 8.1 | `MAMC_BioStat_Setup_..._Windows7-8.exe` |
-            | Mac with Apple chip (M1-M4) | `..._macOS-AppleSilicon.dmg` |
+            | Mac with Apple chip (M1–M4) | `..._macOS-AppleSilicon.dmg` |
             | Older Intel Mac | `..._macOS-Intel.dmg` |
-            | No admin rights / USB stick | the `..._portable.zip` for your Windows version |
+            | College PC where you cannot install | the `..._portable.zip` for your Windows version → right-click → **Extract All** → double-click **MAMC BioStat.vbs** |
 
-            Everything needed (including R) is inside - no internet required after download.
+            Everything needed (including R) is inside – no internet required after download. The program opens in its own window after a few seconds; close the window to quit.
