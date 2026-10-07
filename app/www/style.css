@@ -4,7 +4,12 @@ body { color: var(--ink); background: #fbfaf8; }
 .navbar-brand { font-weight: 700; letter-spacing: .3px; }
 .brand-mark { display: inline-flex; align-items: center; gap: 8px; }
 .brand-mark .dot { width: 26px; height: 26px; border-radius: 6px; background: var(--mamc); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; }
-.corner-badge { position: fixed; right: 12px; bottom: 10px; z-index: 2000; background: var(--mamc); color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+.corner-badge { position: fixed; left: 14px; bottom: 14px; z-index: 2000; background: var(--mamc); color: #fff; padding: 3px; border-radius: 20px; font-size: 11.5px; box-shadow: 0 1px 5px rgba(0,0,0,.18); opacity: .75; white-space: nowrap; cursor: default; transition: opacity .2s; }
+/* small logo only; the full credit appears when the mouse is over it, so it never hides data or scroll bars */
+.corner-badge .cb-text { display: none; padding: 0 9px 0 2px; }
+.corner-badge:hover { opacity: 1; }
+.corner-badge:hover .cb-text { display: inline; }
+body { padding-bottom: 46px; }
 .corner-badge a { color: #ffd9e0; }
 .hero { background: linear-gradient(135deg, var(--mamc) 0%, #4a0f1b 100%); color: #fff; border-radius: 14px; padding: 28px 30px; margin: 10px 0 20px; }
 .hero h1 { font-weight: 800; margin: 0 0 6px; } .hero p { opacity: .92; font-size: 1.05rem; margin: 0; }
@@ -49,7 +54,7 @@ pre.pycode { background: #1e1e2a; color: #e8e8f0; padding: 14px; border-radius: 
 /* ---------- Home (v1.1) ---------- */
 .brand-mark img { height: 38px; width: auto; }
 .corner-badge { display: flex; align-items: center; gap: 6px; }
-.corner-badge img { height: 18px; background: #fff; border-radius: 50%; padding: 1px; }
+.corner-badge img { height: 24px; width: 24px; background: #fff; border-radius: 50%; padding: 1px; }
 .hero2 { display: flex; align-items: center; gap: 30px; background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 24px 30px; margin: 14px 0 18px; position: relative; overflow: hidden; }
 .hero2:before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 8px; background: linear-gradient(var(--mamc), #c0392b, #e8a33d); }
 .hero-logo { height: 150px; width: auto; flex: none; }
