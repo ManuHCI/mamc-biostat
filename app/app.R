@@ -4,7 +4,7 @@
 #  Developed by the faculty of Maulana Azad Medical College & Lok Nayak Hospital, New Delhi
 #  Licence: GNU GPL-3.0   |   Engine: R
 # =====================================================================
-APP_VERSION <- "1.1.3"
+APP_VERSION <- "1.1.4"
 suppressPackageStartupMessages({ library(shiny); library(readxl); library(DT); library(ggplot2) })
 options(shiny.maxRequestSize = 100 * 1024^2, warn = 1)
 
@@ -38,7 +38,7 @@ ui <- tagList(
   tags$head(tags$link(rel = "stylesheet", href = "katex/katex.min.css"), tags$link(rel = "stylesheet", href = "style.css"),
             tags$script(src = "katex/katex.min.js"), tags$script(src = "katex/contrib/auto-render.min.js"), tags$script(src = "app.js"),
             tags$title("MAMC BioStat"), tags$link(rel = "icon", type = "image/png", href = "mamc_logo.png")),
-  div(class = "corner-badge", tags$img(src = "mamc_logo.png", alt = ""), HTML("&copy; Maulana Azad Medical College, New Delhi &middot; Free &amp; Open Source")),
+  div(class = "corner-badge", title = "MAMC BioStat - Maulana Azad Medical College, New Delhi - Free & Open Source", tags$img(src = "mamc_logo.png", alt = "MAMC"), span(class = "cb-text", HTML("&copy; Maulana Azad Medical College, New Delhi &middot; Free &amp; Open Source"))),
   navbarPage(title = brand, id = "nav", windowTitle = "MAMC BioStat", collapsible = TRUE,
     theme = bslib::bs_theme(version = 5, primary = "#7b1c2e", base_font = bslib::font_collection("Segoe UI", "Helvetica Neue", "Arial", "sans-serif")),
 
