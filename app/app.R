@@ -4,12 +4,12 @@
 #  Developed by the faculty of Maulana Azad Medical College & Lok Nayak Hospital, New Delhi
 #  Licence: GNU GPL-3.0   |   Engine: R
 # =====================================================================
-APP_VERSION <- "1.1.4"
+APP_VERSION <- "1.1.5"
 suppressPackageStartupMessages({ library(shiny); library(readxl); library(DT); library(ggplot2) })
 options(shiny.maxRequestSize = 100 * 1024^2, warn = 1)
 
 for (f in c("helpers.R", "data_check.R", "tests_descriptive.R", "tests_compare.R", "tests_nonpar.R", "tests_categorical.R",
-            "tests_correlation.R", "tests_agreement.R", "tests_survival_ss.R", "wizard.R", "visualize.R"))
+            "tests_correlation.R", "tests_agreement.R", "tests_survival_ss.R", "wizard.R", "visualize.R", "rcode.R"))
   source(file.path("R", f), local = FALSE)
 
 # ---- help library ----------------------------------------------------
@@ -137,9 +137,15 @@ ui <- tagList(
     # ---------------- REPORT ----------------
     tabPanel("Report", icon = icon("file-lines"),
       div(class = "container-fluid", style = "max-width:1150px",
-        h3("Analysis report"), p("Every analysis you run is added here automatically."),
-        downloadButton("dl_report", "Download full report (HTML - open in any browser, copy into Word)", class = "btn-primary"), " ",
-        downloadButton("dl_tables", "Download all result tables (Excel)"), " ", actionButton("clear_report", "Clear report", class = "btn-outline-danger"),
+        h3("Analysis report"), p("Every analysis you run is added here automatically, with the R code used for it."),
+        div(class = "dl-row",
+          downloadButton("dl_report", "Full report (HTML)", class = "btn-primary"),
+          downloadButton("dl_tables", "Results + data (Excel)", class = "btn-primary"),
+          downloadButton("dl_rcode", "R code used (.R)", class = "btn-primary"),
+          actionButton("clear_report", "Clear report", class = "btn-outline-danger")),
+        div(class = "notebox", HTML(paste0("&#9432; <b>Results + data (Excel)</b>: every result table, plus the exact data that were analysed. ",
+          "<b>R code (.R)</b>: the R commands behind every analysis. Save both files in the same folder, open the .R file in R or RStudio and run it ",
+          "(RStudio: <b>Source</b>) to reproduce the results, check them, or quote the R functions in your Methods section."))),
         hr(), uiOutput("report_ui"))),
 
     # ---------------- LEARN ----------------
@@ -306,7 +312,8 @@ server <- function(input, output, session) {
     if (is.null(res$error)) {
       img <- NULL
       if (!is.null(res$plot)) { tf <- tempfile(fileext = ".png"); png(tf, 1800, 1150, res = 170); try(res$plot(), silent = TRUE); dev.off(); img <- base64enc_file(tf) }
-      rv$report[[length(rv$report) + 1]] <- list(name = t$name, time = res$time, args = a, html = res$html, tables = res$tables, steps = res$steps, img = img)
+      rv$report[[length(rv$report) + 1]] <- list(name = t$name, id = t$id, time = res$time, args = a, html = res$html, tables = res$tables, steps = res$steps, img = img,
+                                                 data = if (t$needs_data) rv$data else NULL)
     }
   })
   output$results_ui <- renderUI({
@@ -360,14 +367,30 @@ server <- function(input, output, session) {
   output$v_py <- downloadHandler(filename = function() paste0("mamc_chart_", input$v_chart, ".py"), content = function(file) writeLines(v_py(), file))
 
   # ---------------- report ----------------
+  # one data sheet per distinct dataset used (Data_1, Data_2, ...), shared by the Excel file and the R code
+  export_bundle <- function() {
+    sheets <- list(); entries <- rv$report
+    for (i in seq_along(entries)) { dat <- entries[[i]]$data
+      if (is.null(dat)) next
+      hit <- which(vapply(sheets, identical, logical(1), dat))
+      key <- if (length(hit)) names(sheets)[hit[1]] else { k <- paste0("Data_", length(sheets) + 1); sheets[[k]] <- dat; k }
+      entries[[i]]$data_key <- key }
+    list(entries = entries, sheets = sheets)
+  }
+  xlsx_name <- function() paste0("MAMC_BioStat_results_", format(Sys.Date()), ".xlsx")
   report_html <- function(for_file = FALSE) {
     if (!length(rv$report)) return("<p>No analyses yet.</p>")
+    eb <- export_bundle()
     paste(vapply(rev(seq_along(rv$report)), function(i) { e <- rv$report[[i]]
+      code <- paste(rcode_block(eb$entries[[i]], i), collapse = "\n")
       args <- e$args[names(e$args) != "alpha"]
       paste0("<div class='report-entry'><h3>", i, ". ", e$name, "</h3><p style='color:#666'>", e$time, " &middot; ", htmltools::htmlEscape(paste0(names(args), " = ", vapply(args, function(v) paste(v, collapse = ", "), ""), collapse = "; ")), "</p>",
              e$html, paste(mapply(df_html, e$tables, names(e$tables)), collapse = ""),
              if (!is.null(e$img)) paste0("<img src='data:image/png;base64,", e$img, "' style='max-width:100%;border:1px solid #eee'>") else "",
-             if (for_file) paste0("<details><summary>Step-by-step calculation</summary>", e$steps, "</details>") else "", "</div>") }, ""), collapse = "")
+             if (for_file) paste0("<details><summary>Step-by-step calculation</summary>", e$steps, "</details>") else "",
+             "<details class='rcode-box'><summary>R code used for this analysis</summary><pre class='rcode'>", htmltools::htmlEscape(code), "</pre>",
+             if (!is.null(eb$entries[[i]]$data_key)) paste0("<p class='rcode-note'>The data (", eb$entries[[i]]$data_key, ") are read from the Excel file by the downloaded .R script.</p>") else "", "</details>",
+             "</div>") }, ""), collapse = "")
   }
   output$report_ui <- renderUI(HTML(report_html()))
   observeEvent(input$clear_report, rv$report <- list())
@@ -378,10 +401,15 @@ server <- function(input, output, session) {
       "<script src='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js' onload=\"renderMathInElement(document.body,{delimiters:[{left:'\\\\[',right:'\\\\]',display:true}]})\"></script></head><body>",
       "<div class='hero'><h1>MAMC BioStat - Analysis Report</h1><p>Data: ", htmltools::htmlEscape(rv$name %||% "-"), " &middot; generated ", format(Sys.time(), "%d %b %Y %H:%M"), "</p></div>",
       report_html(TRUE), "<hr><p style='color:#777;font-size:12px'>Generated by MAMC BioStat v", APP_VERSION, " (R ", getRversion(), ") - Maulana Azad Medical College &amp; Lok Nayak Hospital, New Delhi. Free &amp; open source (GPL-3).</p></body></html>"), file, useBytes = TRUE) })
-  output$dl_tables <- downloadHandler(filename = function() paste0("MAMC_BioStat_tables_", format(Sys.Date()), ".xlsx"), content = function(file) {
+  output$dl_rcode <- downloadHandler(filename = function() paste0("MAMC_BioStat_R_code_", format(Sys.Date()), ".R"), content = function(file) {
+    eb <- export_bundle()
+    txt <- if (!length(eb$entries)) "# No analyses run yet in MAMC BioStat." else rcode_script(eb$entries, eb$sheets, xlsx_name(), APP_VERSION)
+    writeLines(enc2utf8(txt), file, useBytes = TRUE) })
+  output$dl_tables <- downloadHandler(filename = function() xlsx_name(), content = function(file) {
     sh <- list(); for (i in seq_along(rv$report)) for (nm in names(rv$report[[i]]$tables)) {
       key <- substr(gsub("[^A-Za-z0-9 ]", "", paste0(i, " ", nm)), 1, 31); while (key %in% names(sh)) key <- paste0(substr(key, 1, 29), "_", length(sh))
       sh[[key]] <- as.data.frame(rv$report[[i]]$tables[[nm]], check.names = FALSE) }
+    eb <- export_bundle(); for (k in names(eb$sheets)) sh[[k]] <- as.data.frame(eb$sheets[[k]], check.names = FALSE)
     if (!length(sh)) sh <- list(Info = data.frame(Note = "No analyses run yet")); writexl::write_xlsx(sh, file) })
 
   # ---------------- learn ----------------
