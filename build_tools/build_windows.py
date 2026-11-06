@@ -242,7 +242,7 @@ SectionEnd
 
 def stage_app(stage, r_dir):
     log("assembling program folder")
-    shutil.copytree(ROOT / "app", stage / "app", ignore=shutil.ignore_patterns("*.Rhistory", ".RData"))
+    shutil.copytree(ROOT / "app", stage / "app", ignore=shutil.ignore_patterns("*.Rhistory", ".RData", "Rplots.pdf"))
     shutil.copy(ROOT / "launcher.R", stage / "launcher.R")
     shutil.copy(ROOT / "LICENSE", stage / "LICENSE.txt")
     shutil.copy(ROOT / "installer" / "mamc_biostat.ico", stage / "mamc_biostat.ico")
@@ -253,12 +253,51 @@ def stage_app(stage, r_dir):
     shutil.move(str(r_dir), str(stage / "R"))
 
 
+def make_outputs(work, stage, prof):
+    dist = ROOT / "dist"
+    dist.mkdir(exist_ok=True)
+    base = f"MAMC_BioStat_{APP_VERSION}_{prof['suffix']}"
+    log("making portable zip")
+    shutil.make_archive(str(dist / f"{base}_portable"), "zip", root_dir=work, base_dir="MAMC_BioStat")
+    log("making installer with NSIS")
+    nsi = work / "installer.nsi"
+    v4 = ".".join((APP_VERSION.split(".") + ["0", "0", "0"])[:4])
+    nsi.write_text(NSI.format(outfile=str(dist / f"MAMC_BioStat_Setup_{APP_VERSION}_{prof['suffix']}.exe"), version=APP_VERSION,
+                              version4=v4, label=prof["label"], icon=str(ROOT / "installer" / "mamc_biostat.ico"),
+                              license=str(ROOT / "LICENSE"), stage=str(stage)), encoding="utf-8")
+    makensis = shutil.which("makensis") or r"C:\Program Files (x86)\NSIS\makensis.exe"
+    subprocess.run([makensis, "-V2", str(nsi)], check=True)
+    log(f"done -> {dist}")
+
+
+def rebuild_from_portable(zip_path, profile, prof):
+    """Quick rebuild when only the R-language app files changed: keep the bundled R and packages of an earlier release."""
+    work = ROOT / "build" / f"{profile}-repack"
+    shutil.rmtree(work, ignore_errors=True)
+    work.mkdir(parents=True)
+    log(f"extracting R and packages from {zip_path}")
+    with zipfile.ZipFile(zip_path) as z:
+        for m in z.namelist():
+            if m.startswith("MAMC_BioStat/R/"):
+                z.extract(m, work / "old")
+    r_dir = work / "R"
+    shutil.move(str(work / "old" / "MAMC_BioStat" / "R"), str(r_dir))
+    shutil.rmtree(work / "old")
+    stage = work / "MAMC_BioStat"
+    stage.mkdir()
+    stage_app(stage, r_dir)
+    make_outputs(work, stage, prof)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--profile", choices=PROFILES, default="modern")
     ap.add_argument("--r-version", help="override the R version")
+    ap.add_argument("--from-portable", help="reuse R + packages from an earlier portable .zip of the same profile (app files are updated only)")
     a = ap.parse_args()
     prof = PROFILES[a.profile]
+    if a.from_portable:
+        return rebuild_from_portable(a.from_portable, a.profile, prof)
     r_version = a.r_version or prof["r_version"] or latest_r_version()
     if not packages_complete(".".join(r_version.split(".")[:2])):
         log(f"some packages are not yet built for R {r_version} - using R {FALLBACK_R}")
