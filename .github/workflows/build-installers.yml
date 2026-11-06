@@ -85,7 +85,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { arch: AppleSilicon, runner: macos-14 }
+          - { arch: AppleSilicon, runner: macos-15 }
           - { arch: Intel, runner: macos-15-intel }
     steps:
       - uses: actions/checkout@v4
