@@ -11,7 +11,7 @@ Run on a Mac (Apple Silicon -> arm64 build, Intel -> x86_64 build):
 Needs: Python 3.8+, internet, Xcode command-line tools (sips, iconutil, hdiutil), sudo for installing R on the build Mac.
 Output: dist/MAMC_BioStat_<version>_macOS-<arch>.dmg
 """
-import os, platform, plistlib, re, shutil, subprocess, sys, tarfile, io, urllib.request
+import os, platform, plistlib, re, shutil, subprocess, sys, tarfile, io, time, urllib.request
 from pathlib import Path
 
 CRAN = "https://cloud.r-project.org"
@@ -152,7 +152,16 @@ def main():
     dist.mkdir(exist_ok=True)
     out = dist / f"MAMC_BioStat_{APP_VERSION}_macOS-{'AppleSilicon' if ARCH == 'arm64' else 'Intel'}.dmg"
     out.unlink(missing_ok=True)
-    run(["hdiutil", "create", "-volname", "MAMC BioStat", "-srcfolder", str(dmgsrc), "-ov", "-format", "UDZO", str(out)])
+    # hdiutil sometimes fails with "Resource busy" on build machines (Spotlight/XProtect scanning) - retry
+    for attempt in range(1, 6):
+        try:
+            run(["hdiutil", "create", "-volname", "MAMC BioStat", "-srcfolder", str(dmgsrc), "-ov", "-format", "UDZO", str(out)])
+            break
+        except subprocess.CalledProcessError:
+            if attempt == 5:
+                raise
+            log(f"hdiutil failed (attempt {attempt}) - retrying in 20 s")
+            time.sleep(20)
     log(f"done -> {out}")
 
 
