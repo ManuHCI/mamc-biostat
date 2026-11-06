@@ -28,6 +28,9 @@ jobs:
       - name: Render all chart types
         working-directory: app
         run: Rscript ../tools/test_charts.R
+      - name: Check exported R code reproduces every test
+        working-directory: app
+        run: Rscript ../tools/test_rcode.R
 
   windows:
     name: Windows ${{ matrix.profile }}
